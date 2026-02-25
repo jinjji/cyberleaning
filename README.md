@@ -7,18 +7,28 @@ UI 자동화 및 템플릿 매칭을 기반으로 한 RPA(Robotic Process Automa
 ```
 .
 ├── runner.py                 # 메인 자동화 스크립트 (JSON 로깅 추가)
-├── compare_runs.py           # 🆕 로그 비교 분석 스크립트
-├── starter_kit/              # 템플릿 및 유틸리티 패키지
-│   ├── config_example.py     # 설정 샘플
+├── requirements.txt          # 프로젝트 의존성
+│
+├── scripts/                  # 🆕 분석 스크립트 모음
+│   ├── compare_runs.py       # 로그 비교 분석 스크립트
+│   ├── diagnose.py           # 최신 로그 진단 스크립트
+│   └── stats.py              # 전체 로그 통계 생성
+│
+├── tools/                    # 🆕 개발 유틸리티
 │   ├── runner_starter.py     # 스타터 템플릿
+│   ├── config_example.py     # 설정 샘플
 │   ├── capture_from_cursor.py # 커서 위치 캡처 유틸
 │   ├── template_quality_check.py # 템플릿 품질 검사
-│   └── requirements.txt       # starter_kit 의존성
+│   └── README.md             # tools 사용 가이드
+│
+├── docs/                     # 🆕 문서 모음
+│   ├── COMPARE_RUNS_GUIDE.md # 로그 분석 가이드
+│   ├── QUICK_START_COMPARE.md # 빠른 시작 가이드
+│   └── validation_scenarios.md # 검증 시나리오
+│
 ├── assets/                   # 이미지 템플릿 (별도 저장소)
-├── logs/                     # 🆕 자동화 실행 JSON 로그 (자동 생성)
-├── validation_scenarios.md    # 검증 시나리오
-├── COMPARE_RUNS_GUIDE.md     # 🆕 로그 분석 가이드
-└── requirements.txt           # 프로젝트 의존성
+├── logs/                     # 자동화 실행 JSON 로그 (자동 생성)
+└── .venv/                    # Python 가상환경
 ```
 
 ## 🚀 시작하기
@@ -37,8 +47,8 @@ pip install -r requirements.txt
 ### 2. 설정
 
 ```bash
-# starter_kit의 config_example.py를 참고하여 설정 구성
-cp starter_kit/config_example.py config.py
+# tools의 config_example.py를 참고하여 설정 구성
+cp tools/config_example.py config.py
 # config.py 파일에서 필요한 설정 수정
 ```
 
@@ -56,8 +66,7 @@ python runner.py
 - 상태 머신(State Machine) 기반 동작
 - 이미지 템플릿 매칭을 통한 UI 요소 감지
 
-### starter_kit 패키지
-Python 패키지로 구성된 유틸리티 모음
+### tools 폴더의 개발 유틸리티
 
 #### config_example.py
 - 템플릿 경로 설정
@@ -74,6 +83,8 @@ Python 패키지로 구성된 유틸리티 모음
 #### template_quality_check.py
 - 템플릿 품질 검증
 - 이미지 유사도 분석
+
+자세한 내용은 [tools/README.md](tools/README.md) 참고
 
 ## ⚙️ 주요 기능
 
@@ -134,7 +145,7 @@ python runner.py
 # logs/run_20260225_100100.json 저장됨
 
 # 3. 로그 비교 분석
-python compare_runs.py --recent
+python scripts/compare_runs.py --recent
 ```
 
 ### 분석 결과 예시
@@ -161,7 +172,7 @@ python compare_runs.py --recent
 ✅ 타임아웃 분석
 ✅ 자동 개선 제안
 
-자세한 가이드는 [COMPARE_RUNS_GUIDE.md](COMPARE_RUNS_GUIDE.md) 참고
+자세한 가이드는 [docs/COMPARE_RUNS_GUIDE.md](docs/COMPARE_RUNS_GUIDE.md) 참고
 
 ## ⚠️ 주의사항
 
@@ -184,5 +195,7 @@ python compare_runs.py --recent
 
 ## 🔗 관련 파일
 
-- [검증 시나리오](validation_scenarios.md)
-- [Starter Kit README](starter_kit/README.md)
+- [검증 시나리오](docs/validation_scenarios.md)
+- [Tools 가이드](tools/README.md)
+- [로그 비교 가이드](docs/COMPARE_RUNS_GUIDE.md)
+- [빠른 시작 가이드](docs/QUICK_START_COMPARE.md)

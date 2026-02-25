@@ -1,0 +1,9 @@
+{"timestamp": "2026-02-25T21:28:23.421649", "message": "3초 후 runner 시작", "event_type": "init", "details": {}}
+{"timestamp": "2026-02-25T21:28:26.703091", "message": "[INIT] scale x=2.000 y=2.000 (screen=1920x1243, image=3840x2486)", "event_type": "init", "details": {"scale_x": 2.0, "scale_y": 2.0, "screen_size": [1920, 1243], "image_size": [3840, 2486]}}
+{"timestamp": "2026-02-25T21:28:30.043490", "message": "[S0] START not found -> End (after 5 checks)", "event_type": "log", "details": {}}
+{"timestamp": "2026-02-25T21:28:31.570136", "message": "[S0] still not found after End", "event_type": "log", "details": {}}
+{"timestamp": "2026-02-25T21:28:35.108546", "message": "[S0] START not found -> End (after 5 checks)", "event_type": "log", "details": {}}
+{"timestamp": "2026-02-25T21:28:36.592770", "message": "[S0] still not found after End", "event_type": "log", "details": {}}
+{"timestamp": "2026-02-25T21:28:40.201564", "message": "[S0] START not found -> End (after 5 checks)", "event_type": "log", "details": {}}
+{"timestamp": "2026-02-25T21:28:41.680008", "message": "[S0] still not found after End", "event_type": "log", "details": {}}
+{"timestamp": "2026-02-25T21:28:41.680033", "message": "[ERROR] S0_LIST_WAIT_START timeout 15.0s: 'START' not found -> exit", "event_type": "error", "details": {"state": "S0_LIST_WAIT_START", "target": "START", "elapsed": 14.97691011428833, "timeout": 10.0}}
