@@ -35,6 +35,9 @@ S1_CLICK_MODE = "FIXED"  # FIXED | TEMPLATE
 ENTER_COOLDOWN = 1.0
 CLICK_COOLDOWN = 2.0
 S3_TIMEOUT = 5.0
+S0_TIMEOUT = 10.0
+S2_TIMEOUT = 60.0
+S4_TIMEOUT = 60.0
 
 # 감지 안정화
 REQUIRE_HITS = 2
@@ -235,6 +238,23 @@ def resolve_start_region():
     return left_half_region()
 
 
+def should_abort_state(state_entered_at: float, timeout_sec: float, state: str, target: str):
+    elapsed = time.time() - state_entered_at
+    if elapsed < timeout_sec:
+        return False
+    log(
+        f"[ERROR] {state} timeout {elapsed:.1f}s: '{target}' not found -> exit",
+        event_type="error",
+        details={
+            "state": state,
+            "target": target,
+            "elapsed": elapsed,
+            "timeout": timeout_sec,
+        },
+    )
+    return True
+
+
 def main():
     init_json_log()
     pyautogui.FAILSAFE = True
@@ -245,6 +265,7 @@ def main():
     cooldown_until = 0.0
     start_history = deque(maxlen=DEBUG_HISTORY_SIZE)
     s3_entered_at = None
+    state_entered_at = time.time()
 
     hits = {"POPUP1": 0, "POPUP2": 0, "EXIT": 0, "START": 0}
     state = "S0_LIST_WAIT_START"
@@ -278,6 +299,7 @@ def main():
                     for k in hits:
                         hits[k] = 0
                     state = "S1_PLAYER_FOCUS"
+                    state_entered_at = time.time()
                     log("[STATE] S0 -> S1", event_type="state_transition", details={
                         "from": "S0_LIST_WAIT_START",
                         "to": "S1_PLAYER_FOCUS"
@@ -300,6 +322,9 @@ def main():
                         if DEBUG_MODE and not SIMPLE_LOG:
                             print_start_history(start_history)
 
+                if should_abort_state(state_entered_at, S0_TIMEOUT, state, "START"):
+                    return
+
             elif state == "S1_PLAYER_FOCUS":
                 if S1_CLICK_MODE == "TEMPLATE":
                     box_player = locate(IMG_PLAYER, region=None, confidence=PLAYER_CONFIDENCE)
@@ -315,6 +340,7 @@ def main():
                 for k in hits:
                     hits[k] = 0
                 state = "S2_WATCHING_WAIT_POPUP1"
+                state_entered_at = time.time()
                 log("[STATE] S1 -> S2", event_type="state_transition", details={
                     "from": "S1_PLAYER_FOCUS",
                     "to": "S2_WATCHING_WAIT_POPUP1"
@@ -336,10 +362,13 @@ def main():
                         hits[k] = 0
                     state = "S3_WAIT_POPUP2"
                     s3_entered_at = time.time()
+                    state_entered_at = time.time()
                     log("[STATE] S2 -> S3", event_type="state_transition", details={
                         "from": "S2_WATCHING_WAIT_POPUP1",
                         "to": "S3_WAIT_POPUP2"
                     })
+                elif should_abort_state(state_entered_at, S2_TIMEOUT, state, "POPUP1"):
+                    return
 
             elif state == "S3_WAIT_POPUP2":
                 if locate(IMG_POPUP2):
@@ -357,6 +386,7 @@ def main():
                         hits[k] = 0
                     state = "S4_WAIT_EXIT"
                     s3_entered_at = None
+                    state_entered_at = time.time()
                     log("[STATE] S3 -> S4", event_type="state_transition", details={
                         "from": "S3_WAIT_POPUP2",
                         "to": "S4_WAIT_EXIT"
@@ -370,6 +400,7 @@ def main():
                     hits["POPUP2"] = 0
                     state = "S4_WAIT_EXIT"
                     s3_entered_at = None
+                    state_entered_at = time.time()
                     log("[STATE] S3 -> S4 (skip)", event_type="state_transition", details={
                         "from": "S3_WAIT_POPUP2",
                         "to": "S4_WAIT_EXIT",
@@ -391,10 +422,13 @@ def main():
                     for k in hits:
                         hits[k] = 0
                     state = "S0_LIST_WAIT_START"
+                    state_entered_at = time.time()
                     log("[STATE] S4 -> S0", event_type="state_transition", details={
                         "from": "S4_WAIT_EXIT",
                         "to": "S0_LIST_WAIT_START"
                     })
+                elif should_abort_state(state_entered_at, S4_TIMEOUT, state, "EXIT"):
+                    return
 
             else:
                 log(f"[ERROR] Unknown state: {state}")
