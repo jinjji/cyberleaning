@@ -6,7 +6,8 @@ UI 자동화 및 템플릿 매칭을 기반으로 한 RPA(Robotic Process Automa
 
 ```
 .
-├── runner.py                 # 메인 자동화 스크립트
+├── runner.py                 # 메인 자동화 스크립트 (JSON 로깅 추가)
+├── compare_runs.py           # 🆕 로그 비교 분석 스크립트
 ├── starter_kit/              # 템플릿 및 유틸리티 패키지
 │   ├── config_example.py     # 설정 샘플
 │   ├── runner_starter.py     # 스타터 템플릿
@@ -14,7 +15,9 @@ UI 자동화 및 템플릿 매칭을 기반으로 한 RPA(Robotic Process Automa
 │   ├── template_quality_check.py # 템플릿 품질 검사
 │   └── requirements.txt       # starter_kit 의존성
 ├── assets/                   # 이미지 템플릿 (별도 저장소)
+├── logs/                     # 🆕 자동화 실행 JSON 로그 (자동 생성)
 ├── validation_scenarios.md    # 검증 시나리오
+├── COMPARE_RUNS_GUIDE.md     # 🆕 로그 분석 가이드
 └── requirements.txt           # 프로젝트 의존성
 ```
 
@@ -114,6 +117,51 @@ Python 패키지로 구성된 유틸리티 모음
 
 ### DEBUG_MODE = True
 상세한 디버그 정보 및 히스토리
+
+## 🔍 로그 분석 - Compare Runs 커맨드
+
+**새로운 기능!** 성공/실패한 실행 로그를 자동으로 비교하여 문제점을 분석합니다.
+
+### 사용 방법
+
+```bash
+# 1. 성공한 실행 저장
+python runner.py
+# logs/run_20260225_100000.json 저장됨
+
+# 2. 실패한 실행 저장
+python runner.py
+# logs/run_20260225_100100.json 저장됨
+
+# 3. 로그 비교 분석
+python compare_runs.py --recent
+```
+
+### 분석 결과 예시
+
+```
+[1] 상태 전환 타임라인 비교
+  ✓ 성공: S0 -> S1 -> S2 -> S3 -> S4 -> S0 (완전한 사이클)
+  ✗ 실패: S0 -> S1 (S1에서 멈춤)
+
+[2] 템플릿 감지 통계
+  START   | 성공: 3회 | 실패: 5회 ⚠️
+  POPUP1  | 성공: 1회 | 실패: 0회
+
+[5] 개선 제안
+  • 'START' 템플릿: 감지 실패율이 높습니다.
+    템플릿 품질을 점검하거나 CONFIDENCE 값을 조정해보세요.
+```
+
+### 주요 기능
+
+✅ 상태 전환 타임라인 비교
+✅ 템플릿 감지 통계 분석
+✅ 클릭 이벤트 추적
+✅ 타임아웃 분석
+✅ 자동 개선 제안
+
+자세한 가이드는 [COMPARE_RUNS_GUIDE.md](COMPARE_RUNS_GUIDE.md) 참고
 
 ## ⚠️ 주의사항
 

@@ -1,5 +1,9 @@
 import time
+import json
+import sys
 from collections import deque
+from datetime import datetime
+from pathlib import Path
 
 import pyautogui
 import pyscreeze
@@ -48,9 +52,58 @@ SCROLL_WAIT = 1.0
 SCALE_X = 1.0
 SCALE_Y = 1.0
 
+# JSON 로깅 설정
+JSON_LOG_ENABLED = True
+LOG_DIR = Path("logs")
+CURRENT_LOG_FILE = None
+LOG_BUFFER = []
 
-def log(msg: str):
-    print(msg)
+
+def init_json_log():
+  """JSON 로그 파일 초기화"""
+  global CURRENT_LOG_FILE
+  if not JSON_LOG_ENABLED:
+    return
+
+  LOG_DIR.mkdir(exist_ok=True)
+  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+  CURRENT_LOG_FILE = LOG_DIR / f"run_{timestamp}.json"
+  return CURRENT_LOG_FILE
+
+
+def log(msg: str, event_type: str = "log", details: dict = None):
+  """콘솔에 출력하고 JSON으로도 저장"""
+  print(msg)
+
+  if not JSON_LOG_ENABLED or CURRENT_LOG_FILE is None:
+    return
+
+  log_entry = {
+    "timestamp": datetime.now().isoformat(),
+    "message": msg,
+    "event_type": event_type,
+    "details": details or {}
+  }
+  LOG_BUFFER.append(log_entry)
+
+  # 100개마다 플러시
+  if len(LOG_BUFFER) >= 100:
+    flush_json_log()
+
+
+def flush_json_log():
+  """JSON 로그를 파일에 저장"""
+  global LOG_BUFFER
+  if not LOG_BUFFER or CURRENT_LOG_FILE is None:
+    return
+
+  try:
+    with open(CURRENT_LOG_FILE, "a") as f:
+      for entry in LOG_BUFFER:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    LOG_BUFFER = []
+  except Exception as e:
+    print(f"[ERROR] Failed to write log: {e}", file=sys.stderr)
 
 
 def scaled_point():
@@ -70,7 +123,13 @@ def detect_display_scale():
         SCALE_Y = ih / sh
     else:
         SCALE_X, SCALE_Y = 1.0, 1.0
-    log(f"[INIT] scale x={SCALE_X:.3f} y={SCALE_Y:.3f} (screen={sw}x{sh}, image={iw}x{ih})")
+    msg = f"[INIT] scale x={SCALE_X:.3f} y={SCALE_Y:.3f} (screen={sw}x{sh}, image={iw}x{ih})"
+    log(msg, event_type="init", details={
+        "scale_x": SCALE_X,
+        "scale_y": SCALE_Y,
+        "screen_size": (sw, sh),
+        "image_size": (iw, ih)
+    })
 
 
 def to_image_region(region):
@@ -103,15 +162,17 @@ def box_to_tuple(box):
 
 def log_start_event(box, hits: int):
     _, _, cx, cy = center_points(box)
-    if SIMPLE_LOG:
-        log(f"[S0] START hit {hits}/{REQUIRE_HITS} at ({cx},{cy})")
-    else:
-        left, top, w, h = box_to_tuple(box)
-        cx_img, cy_img, cx, cy = center_points(box)
-        log(
-            f"[START] box=({left},{top},{w},{h}) "
-            f"image=({cx_img},{cy_img}) logical=({cx},{cy}) hits={hits}"
-        )
+    left, top, w, h = box_to_tuple(box)
+    cx_img, cy_img, cx_log, cy_log = center_points(box)
+    msg = f"[S0] START hit {hits}/{REQUIRE_HITS} at ({cx_log},{cy_log})"
+    log(msg, event_type="detection", details={
+        "template": "START",
+        "box": (left, top, w, h),
+        "center_image": (cx_img, cy_img),
+        "center_logical": (cx_log, cy_log),
+        "hits": hits,
+        "required_hits": REQUIRE_HITS
+    })
 
 
 def print_start_history(history):
@@ -130,14 +191,25 @@ def record_start_history(history, box):
 
 def click_scaled(label: str):
     x, y = scaled_point()
-    log(f"[CLICK] {label} ({x},{y})")
+    msg = f"[CLICK] {label} ({x},{y})"
+    log(msg, event_type="click", details={
+        "label": label,
+        "position": (x, y),
+        "method": "scaled"
+    })
     pyautogui.moveTo(x, y, duration=0.15)
     pyautogui.click()
 
 
 def click_center(box, label: str):
     _, _, cx, cy = center_points(box)
-    log(f"[CLICK] {label} ({cx},{cy})")
+    msg = f"[CLICK] {label} ({cx},{cy})"
+    log(msg, event_type="click", details={
+        "label": label,
+        "position": (cx, cy),
+        "method": "center",
+        "box": box_to_tuple(box)
+    })
     pyautogui.moveTo(cx, cy, duration=0.15)
     pyautogui.click()
 
@@ -164,8 +236,9 @@ def resolve_start_region():
 
 
 def main():
+    init_json_log()
     pyautogui.FAILSAFE = True
-    log("3초 후 runner 시작")
+    log("3초 후 runner 시작", event_type="init")
     time.sleep(3)
     detect_display_scale()
 
@@ -205,7 +278,10 @@ def main():
                     for k in hits:
                         hits[k] = 0
                     state = "S1_PLAYER_FOCUS"
-                    log("[STATE] S0 -> S1")
+                    log("[STATE] S0 -> S1", event_type="state_transition", details={
+                        "from": "S0_LIST_WAIT_START",
+                        "to": "S1_PLAYER_FOCUS"
+                    })
                     time.sleep(SCAN_INTERVAL)
                     continue
 
@@ -239,7 +315,10 @@ def main():
                 for k in hits:
                     hits[k] = 0
                 state = "S2_WATCHING_WAIT_POPUP1"
-                log("[STATE] S1 -> S2")
+                log("[STATE] S1 -> S2", event_type="state_transition", details={
+                    "from": "S1_PLAYER_FOCUS",
+                    "to": "S2_WATCHING_WAIT_POPUP1"
+                })
 
             elif state == "S2_WATCHING_WAIT_POPUP1":
                 if locate(IMG_POPUP1):
@@ -248,14 +327,19 @@ def main():
                     hits["POPUP1"] = 0
 
                 if hits["POPUP1"] >= REQUIRE_HITS:
-                    log("[S2] POPUP1 -> Enter")
+                    log("[S2] POPUP1 -> Enter", event_type="detection", details={
+                        "template": "POPUP1"
+                    })
                     pyautogui.press("enter")
                     cooldown_until = time.time() + ENTER_COOLDOWN
                     for k in hits:
                         hits[k] = 0
                     state = "S3_WAIT_POPUP2"
                     s3_entered_at = time.time()
-                    log("[STATE] S2 -> S3")
+                    log("[STATE] S2 -> S3", event_type="state_transition", details={
+                        "from": "S2_WATCHING_WAIT_POPUP1",
+                        "to": "S3_WAIT_POPUP2"
+                    })
 
             elif state == "S3_WAIT_POPUP2":
                 if locate(IMG_POPUP2):
@@ -264,20 +348,33 @@ def main():
                     hits["POPUP2"] = 0
 
                 if hits["POPUP2"] >= REQUIRE_HITS:
-                    log("[S3] POPUP2 -> Enter")
+                    log("[S3] POPUP2 -> Enter", event_type="detection", details={
+                        "template": "POPUP2"
+                    })
                     pyautogui.press("enter")
                     cooldown_until = time.time() + ENTER_COOLDOWN
                     for k in hits:
                         hits[k] = 0
                     state = "S4_WAIT_EXIT"
                     s3_entered_at = None
-                    log("[STATE] S3 -> S4")
+                    log("[STATE] S3 -> S4", event_type="state_transition", details={
+                        "from": "S3_WAIT_POPUP2",
+                        "to": "S4_WAIT_EXIT"
+                    })
                 elif s3_entered_at and (time.time() - s3_entered_at) >= S3_TIMEOUT:
-                    log(f"[S3] POPUP2 timeout {S3_TIMEOUT:.0f}s -> skip to S4")
+                    msg = f"[S3] POPUP2 timeout {S3_TIMEOUT:.0f}s -> skip to S4"
+                    log(msg, event_type="timeout", details={
+                        "timeout_duration": S3_TIMEOUT,
+                        "elapsed": time.time() - s3_entered_at
+                    })
                     hits["POPUP2"] = 0
                     state = "S4_WAIT_EXIT"
                     s3_entered_at = None
-                    log("[STATE] S3 -> S4 (skip)")
+                    log("[STATE] S3 -> S4 (skip)", event_type="state_transition", details={
+                        "from": "S3_WAIT_POPUP2",
+                        "to": "S4_WAIT_EXIT",
+                        "reason": "timeout"
+                    })
 
             elif state == "S4_WAIT_EXIT":
                 box_exit = locate(IMG_EXIT)
@@ -294,7 +391,10 @@ def main():
                     for k in hits:
                         hits[k] = 0
                     state = "S0_LIST_WAIT_START"
-                    log("[STATE] S4 -> S0")
+                    log("[STATE] S4 -> S0", event_type="state_transition", details={
+                        "from": "S4_WAIT_EXIT",
+                        "to": "S0_LIST_WAIT_START"
+                    })
 
             else:
                 log(f"[ERROR] Unknown state: {state}")
@@ -303,7 +403,12 @@ def main():
             time.sleep(SCAN_INTERVAL)
 
     except KeyboardInterrupt:
-        log("\nStopped (Ctrl+C)")
+        log("\nStopped (Ctrl+C)", event_type="shutdown")
+        flush_json_log()
+    finally:
+        flush_json_log()
+        if CURRENT_LOG_FILE and JSON_LOG_ENABLED:
+            print(f"\n[LOG] JSON log saved to: {CURRENT_LOG_FILE}")
 
 
 if __name__ == "__main__":
