@@ -1,0 +1,140 @@
+# RPA 자동화 테스트 프로젝트
+
+UI 자동화 및 템플릿 매칭을 기반으로 한 RPA(Robotic Process Automation) 테스트 프레임워크입니다.
+
+## 📋 프로젝트 구조
+
+```
+.
+├── runner.py                 # 메인 자동화 스크립트
+├── starter_kit/              # 템플릿 및 유틸리티 패키지
+│   ├── config_example.py     # 설정 샘플
+│   ├── runner_starter.py     # 스타터 템플릿
+│   ├── capture_from_cursor.py # 커서 위치 캡처 유틸
+│   ├── template_quality_check.py # 템플릿 품질 검사
+│   └── requirements.txt       # starter_kit 의존성
+├── assets/                   # 이미지 템플릿 (별도 저장소)
+├── validation_scenarios.md    # 검증 시나리오
+└── requirements.txt           # 프로젝트 의존성
+```
+
+## 🚀 시작하기
+
+### 1. 설치
+
+```bash
+# 저장소 클론
+git clone https://github.com/jinjji/[저장소명]
+cd test
+
+# 의존성 설치
+pip install -r requirements.txt
+```
+
+### 2. 설정
+
+```bash
+# starter_kit의 config_example.py를 참고하여 설정 구성
+cp starter_kit/config_example.py config.py
+# config.py 파일에서 필요한 설정 수정
+```
+
+### 3. 실행
+
+```bash
+# 메인 자동화 스크립트 실행
+python runner.py
+```
+
+## 📦 주요 모듈
+
+### runner.py
+- 전체 자동화 플로우를 제어하는 메인 스크립트
+- 상태 머신(State Machine) 기반 동작
+- 이미지 템플릿 매칭을 통한 UI 요소 감지
+
+### starter_kit 패키지
+Python 패키지로 구성된 유틸리티 모음
+
+#### config_example.py
+- 템플릿 경로 설정
+- 탐지 민감도 및 동작 파라미터
+- 로그 정책 설정
+
+#### runner_starter.py
+- 기본 자동화 템플릿
+
+#### capture_from_cursor.py
+- 커서 위치 기반 스크린샷 캡처
+- 템플릿 추출 유틸리티
+
+#### template_quality_check.py
+- 템플릿 품질 검증
+- 이미지 유사도 분석
+
+## ⚙️ 주요 기능
+
+### 상태 관리
+- **S0**: START 버튼 대기 및 클릭
+- **S1**: 플레이어 포커스
+- **S2**: POPUP1 대기
+- **S3**: POPUP2 대기
+- **S4**: EXIT 버튼 대기
+
+### 이미지 감지
+- pyautogui/pyscreeze를 이용한 템플릿 매칭
+- OpenCV 기반 고급 분석
+- 감지 안정화 (REQUIRE_HITS로 오탐지 방지)
+
+### 커스터마이제이션
+- 신뢰도(CONFIDENCE) 조정
+- 스캔 간격 설정
+- 상태별 타임아웃 설정
+- 고정 클릭/템플릿 기반 클릭 선택
+
+## 🔧 설정 옵션
+
+| 옵션 | 설명 | 기본값 |
+|------|------|--------|
+| CONFIDENCE | 이미지 매칭 신뢰도 | 0.88 |
+| REQUIRE_HITS | 감지 확인 횟수 | 2 |
+| SCAN_INTERVAL | 스캔 간격(초) | 0.3 |
+| CLICK_COOLDOWN | 클릭 후 대기 시간 | 2.0 |
+| START_PRECHECK_TRIES | START 사전 확인 횟수 | 5 |
+| S3_TIMEOUT | S3 상태 타임아웃(초) | 5.0 |
+
+## 📝 로그
+
+### SIMPLE_LOG = True
+간단한 로그 출력 (권장)
+```
+[S0] START hit 2/2 at (500,600)
+[CLICK] START (500,600)
+```
+
+### DEBUG_MODE = True
+상세한 디버그 정보 및 히스토리
+
+## ⚠️ 주의사항
+
+- `assets` 폴더의 이미지 템플릿은 별도로 관리됩니다
+- 자동화 실행 중 `Ctrl+C`로 언제든 중단 가능합니다
+- 이미지 템플릿은 대상 해상도에 맞게 준비되어야 합니다
+- FAILSAFE 모드는 활성화되어 있습니다 (화면 모서리 접근 시 중단)
+
+## 📧 기술 스택
+
+- **Python 3.7+**
+- **pyautogui**: 마우스/키보드 제어
+- **opencv-python**: 이미지 처리 및 분석
+- **Pillow**: 이미지 유틸리티
+- **NumPy**: 수치 계산
+
+## 📄 라이센스
+
+개인 프로젝트
+
+## 🔗 관련 파일
+
+- [검증 시나리오](validation_scenarios.md)
+- [Starter Kit README](starter_kit/README.md)

@@ -1,0 +1,38 @@
+"""
+프로젝트별 설정 샘플.
+이 파일을 복사해서 config.py로 사용하세요.
+"""
+
+# 템플릿 경로
+IMG_START = "assets/IMG_START.png"
+IMG_POPUP1 = "assets/IMG_POPUP1.png"
+IMG_POPUP2 = "assets/IMG_POPUP2.png"
+IMG_EXIT = "assets/IMG_EXIT.png"
+IMG_PLAYER = "assets/IMG_PLAYER.png"  # optional
+
+# 탐지/동작 파라미터
+CONFIDENCE = 0.88
+PLAYER_CONFIDENCE = 0.88
+REQUIRE_HITS = 2
+SCAN_INTERVAL = 0.3
+CLICK_COOLDOWN = 2.0
+ENTER_COOLDOWN = 1.0
+S3_TIMEOUT = 5.0
+START_PRECHECK_TRIES = 5
+
+# START 탐색 정책
+START_SEARCH_POLICY = "LEFT_ONLY"  # LEFT_ONLY
+
+# S1 클릭 전략
+S1_CLICK_MODE = "FIXED"  # FIXED | TEMPLATE
+
+# 고정 클릭 좌표 (논리 좌표 기준)
+BASE_WIDTH = 1920
+BASE_HEIGHT = 1243
+BASE_X = 500
+BASE_Y = 500
+
+# 로그
+SIMPLE_LOG = True
+DEBUG_MODE = True
+DEBUG_HISTORY_SIZE = 8
