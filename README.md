@@ -129,6 +129,30 @@ python runner.py
 ### DEBUG_MODE = True
 상세한 디버그 정보 및 히스토리
 
+## 🧪 Webhook 점검
+
+### 빠른 단일 확인 (`test.py`)
+- 목적: 웹훅이 지금 바로 전송 가능한지 빠르게 체크 (curl 단독 경로)
+- 실행:
+```bash
+python test.py
+```
+
+### 상세 원인 진단 (`scripts/diagnose_webhook.py`)
+- 목적: 403 원인을 단계별로 분리 (DNS/TLS/POST payload/curl 비교)
+- 실행:
+```bash
+python scripts/diagnose_webhook.py
+```
+- 결과:
+  - 콘솔 요약
+  - `logs/webhook_diag_YYYYMMDD_HHMMSS.jsonl` 상세 로그
+
+### runner.py 알림 경로
+- `runner.py` 자체는 디스코드 전송 코드를 직접 실행하지 않습니다.
+- 실제 알림 전송은 `.claude`의 Post 훅에서 `scripts/notify_discord.py`를 호출해 처리합니다.
+- `scripts/notify_discord.py`는 curl 경로로 전송합니다.
+
 ## 🔍 로그 분석 - Compare Runs 커맨드
 
 **새로운 기능!** 성공/실패한 실행 로그를 자동으로 비교하여 문제점을 분석합니다.

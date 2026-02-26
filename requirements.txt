@@ -3,3 +3,4 @@ pyscreeze>=0.1.28
 opencv-python>=4.5.0
 Pillow>=8.0.0
 numpy>=1.19.0
+certifi>=2024.0.0
