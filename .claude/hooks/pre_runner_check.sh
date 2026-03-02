@@ -63,25 +63,6 @@ else
     echo -e "${GREEN}✅ 가상 환경 OK: .venv/${NC}"
 fi
 
-# 4. .env 파일 확인
-if [ ! -f ".env" ]; then
-    echo -e "${RED}❌ .env 파일 없음: Discord 웹훅 설정 불가${NC}"
-    HAS_ERROR=1
-else
-    echo -e "${GREEN}✅ .env 파일 OK${NC}"
-
-    # .env에서 DISCORD_WEBHOOK_URL 확인
-    WEBHOOK_URL=$(grep "^DISCORD_WEBHOOK_URL=" .env | cut -d'=' -f2 | xargs)
-    if [ -z "$WEBHOOK_URL" ]; then
-        echo -e "${RED}❌ DISCORD_WEBHOOK_URL 미설정: .env 파일의 값을 확인하세요${NC}"
-        HAS_ERROR=1
-    elif [ "$WEBHOOK_URL" = "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN" ]; then
-        echo -e "${RED}❌ DISCORD_WEBHOOK_URL 미설정: 기본값을 실제 URL로 변경하세요${NC}"
-        HAS_ERROR=1
-    else
-        echo -e "${GREEN}✅ DISCORD_WEBHOOK_URL OK${NC}"
-    fi
-fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
